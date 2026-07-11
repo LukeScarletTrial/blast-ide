@@ -1,0 +1,17 @@
+{
+  "name": "flash-compiler",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "description": "The lightweight Bedrock compilation engine behind Blast IDE",
+  "keywords": [
+    "minecraft",
+    "bedrock",
+    "compiler"
+  ],
+  "dependencies": {
+    "jszip": "^3.10.1"
+  },
+  "author": "",
+  "license": "MIT"
+}

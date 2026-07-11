@@ -1,0 +1,13 @@
+{
+  "name": "blast-ide-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "flash",
+    "blast"
+  ],
+  "scripts": {
+    "dev:blast": "npm run dev --workspace=blast",
+    "build:flash": "npm run build --workspace=flash"
+  }
+}

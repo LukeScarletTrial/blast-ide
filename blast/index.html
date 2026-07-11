@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blast IDE</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #121214;
+            color: #e1e1e6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        header {
+            height: 48px;
+            background-color: #1a1a1e;
+            border-bottom: 1px solid #29292e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+        }
+        .logo-group { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .nav-actions { display: flex; gap: 10px; }
+        .btn {
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .compile-btn { background-color: #4ade80; color: #064e3b; }
+        .compile-btn:hover { background-color: #22c55e; }
+        .new-btn { background-color: #38bdf8; color: #0c4a6e; }
+        .new-btn:hover { background-color: #0ea5e9; }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        sidebar {
+            width: 240px;
+            background-color: #18181c;
+            border-right: 1px solid #29292e;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .workspace {
+            flex: 1;
+            display: flex;
+            background-color: #1e1e24;
+        }
+        .editor-pane {
+            flex: 1;
+            border-right: 1px solid #29292e;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        .visual-pane {
+            flex: 1;
+            padding: 16px;
+            background-color: #151518;
+            overflow-y: auto;
+        }
+        .pane-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #7c7c8a;
+            margin-bottom: 12px;
+        }
+        textarea {
+            width: 100%;
+            flex: 1;
+            background-color: #121214;
+            color: #38bdf8;
+            border: 1px solid #29292e;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: monospace;
+            resize: none;
+        }
+        textarea:focus { outline: 1px solid #38bdf8; }
+
+        /* Custom Project Wizard Modal Overlay Layout */
+        .wizard-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .wizard-window {
+            background: #1a1a1e;
+            border: 1px solid #29292e;
+            border-radius: 8px;
+            width: 700px;
+            max-width: 90%;
+            height: 460px;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
+        }
+        .wizard-form {
+            flex: 1.2;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            border-right: 1px solid #29292e;
+        }
+        .wizard-preview {
+            flex: 1;
+            background: #121214;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+        .wizard-input {
+            width: 100%;
+            background: #121214;
+            color: #fff;
+            border: 1px solid #29292e;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+        .preview-tree-box {
+            background: #18181c;
+            border: 1px solid #29292e;
+            border-radius: 4px;
+            flex: 1;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #a78bfa;
+            overflow-y: auto;
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-group">
+            <span style="color: #f43f5e;">💥</span> Blast IDE
+        </div>
+        <div class="nav-actions">
+            <button class="btn new-btn" id="open-wizard">New Project</button>
+            <button class="btn compile-btn" id="run-flash">Run flash</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <sidebar>
+            <div class="pane-title" id="project-title-display">Project Tree</div>
+            <div id="file-list"></div>
+        </sidebar>
+        
+        <div class="workspace">
+            <div class="editor-pane">
+                <div class="pane-title">Code View (JSON)</div>
+                <textarea id="code-editor" spellcheck="false"></textarea>
+            </div>
+            <div class="visual-pane">
+                <div class="pane-title">Blast Visual Components</div>
+                <div id="visual-editor"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The Custom Screen Wizard Container -->
+    <div class="wizard-overlay" id="wizard-modal">
+        <div class="wizard-window">
+            <div class="wizard-form">
+                <h2 style="font-size: 18px; color: #fff;">Create New Blast Project</h2>
+                <div>
+                    <label style="font-size: 12px; color: #7c7c8a;">Project Name</label>
+                    <input type="text" id="wiz-name" class="wizard-input" value="My Custom Addon">
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #7c7c8a;">Namespace Identifier</label>
+                    <input type="text" id="wiz-space" class="wizard-input" value="custom">
+                </div>
+                <div style="display: flex; gap: 16px; margin-top: 4px;">
+                    <label style="font-size: 13px;"><input type="checkbox" id="wiz-bp" checked> Behavior Pack</label>
+                    <label style="font-size: 13px;"><input type="checkbox" id="wiz-rp" checked> Resource Pack</label>
+                </div>
+                <div style="margin-top: auto; display: flex; gap: 10px;">
+                    <button class="btn" id="btn-wiz-cancel" style="background:#29292e; color:#fff; flex:1;">Cancel</button>
+                    <button class="btn" id="btn-wiz-create" style="background:#38bdf8; color:#0c4a6e; flex:2;">Generate Workspace</button>
+                </div>
+            </div>
+            <div class="wizard-preview">
+                <div class="pane-title">Live Blueprint Map</div>
+                <div class="preview-tree-box" id="wiz-tree-view"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
